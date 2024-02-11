@@ -4,14 +4,19 @@ namespace TemplaterLib
 {
 	public class Templater
 	{
-		const string baseFilePath = "..\\..\\..\\..\\TestData\\";
-		const string templateFilePath = "TemplateFile.html";
-		const string dataFilePath = "DataFile.json";
-		const string expectedFilePath = "ExpectedFile.html";
+		const string defaultDescription = "default description";
+		const decimal defaultPrice = 5.5m;
 
 		public string CreateHtml(string template, string jsonData)
 		{
-			return default;
+			var result = new HtmlBuilder()
+				   .WithTemplate(template)
+				   .WithData(jsonData)
+				   .WithDefaultDescription(defaultDescription)
+				   .WithDefaultPrice(defaultPrice)
+				   .Build();
+
+			return result;
 		}
 	}
 }
