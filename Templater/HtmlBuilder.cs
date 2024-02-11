@@ -9,9 +9,6 @@ namespace TemplaterLib
 {
 	internal class HtmlBuilder
 	{
-		private const string startFunctionTag = "{%";
-		private const string endFunctionTag = "%}";
-
 		private HtmlDocument document;
 		private TemplateDataModel data;
 		private string defaultDescription;
@@ -53,7 +50,7 @@ namespace TemplaterLib
 			foreach (var node in nodesWithOperatorDelegate)
 			{
 				var replacementNodes = node.ExecuteOperator();
-				ReplaceChildren(node.Node, replacementNodes);
+				ReplaceNodesWithProcessedOnes(node.Node, replacementNodes);
 			}
 
 			return document.DocumentNode.OuterHtml;
@@ -66,8 +63,9 @@ namespace TemplaterLib
 			var nodesWithOperatorDelegate = new List<INodeWithOperator>();
 			foreach (var node in candidateNodes)
 			{
-				var operatorName = new String(node.InnerHtml.Trim().Skip(startFunctionTag.Length).ToArray())
-					.Split(' ')[1].ToLower();
+				var operatorName = node.FirstChild.InnerHtml
+					.Trim().TrimOperatorTags().Trim()
+					.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0].ToLower();
 				var nodeWithOperatorDelegate = NodeWithOperatorFactory.Create(node, operatorName, data);
 				nodesWithOperatorDelegate.Add(nodeWithOperatorDelegate);
 			}
@@ -85,10 +83,10 @@ namespace TemplaterLib
 				return false;
 			}
 
-			var isHavingFunctionTagsOnEnds = firstChildText.StartsWith(startFunctionTag)
-				&& firstChildText.EndsWith(endFunctionTag)
-				&& lastChildText.StartsWith(startFunctionTag)
-				&& lastChildText.EndsWith(endFunctionTag)
+			var isHavingFunctionTagsOnEnds = firstChildText.StartsWith(Constants.StartFunctionTag)
+				&& firstChildText.EndsWith(Constants.EndFunctionTag)
+				&& lastChildText.StartsWith(Constants.StartFunctionTag)
+				&& lastChildText.EndsWith(Constants.EndFunctionTag)
 				&& x.FirstChild != x.LastChild
 				&& x.FirstChild?.NodeType == HtmlNodeType.Text
 				&& x.LastChild?.NodeType == HtmlNodeType.Text;
@@ -96,7 +94,7 @@ namespace TemplaterLib
 			return isHavingFunctionTagsOnEnds;
 		}
 
-		private void ReplaceChildren(HtmlNode parent, HtmlNodeCollection newChildren)
+		private void ReplaceNodesWithProcessedOnes(HtmlNode parent, HtmlNodeCollection newChildren)
 		{
 			parent.RemoveAllChildren();
 			parent.AppendChildren(newChildren);

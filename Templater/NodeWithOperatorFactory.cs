@@ -8,12 +8,11 @@ namespace TemplaterLib
 {
 	internal static class NodeWithOperatorFactory
 	{
-		private const string ForOperator = "for";
 		public static INodeWithOperator Create(HtmlNode node, string operatorName, TemplateDataModel data)
 		{
 			switch (operatorName.ToLower())
 			{
-				case ForOperator:
+				case Constants.For:
 					return new NodeWithOperatorFor(node, operatorName, data);
 				default:
 					throw new ArgumentException("Invalid operator");
