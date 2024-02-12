@@ -9,6 +9,6 @@ namespace TemplaterLib
 		public InputDataModel InputData { get; set; }
 		public string Paragraph{ get; set; }
 
-		public decimal Price { get; set; }
+		public decimal? Price { get; set; }
 	}
 }

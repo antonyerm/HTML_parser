@@ -3,16 +3,16 @@
 		{
 			"name": "Apple",
 			"price": 329,
-			"description": null
+			"description": "flat-out fun"
 		},
 		{
 			"name": "Orange",
 			"price": 25,
-			"description": null
+			"description": "colorful"
 		},
 		{
 			"name": "Banana",
-			"price": null,
+			"price": 99,
 			"description": "peel it"
 		}
 	]

@@ -13,6 +13,9 @@ namespace TemplaterLib
 {
 	internal class NodeWithOperatorFor : INodeWithOperator
 	{
+		private string collectionName;
+		private string iterationVariableName;
+
 		public TemplateDataModel Data { get; }
 
 		public HtmlNode Node { get; }
@@ -31,8 +34,8 @@ namespace TemplaterLib
 			var replacementNodes = new HtmlNodeCollection(Node);
 			var cycleDeclaration = Node.FirstChild.InnerHtml.Trim();
 			var words = cycleDeclaration.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-			var iterationVariable = words.SkipWhile(x => x.ToLower() != Constants.For)?.ElementAtOrDefault(1);
-			var collectionName = words.SkipWhile(x => x.ToLower() != Constants.In).ElementAtOrDefault(1);
+			iterationVariableName = words.SkipWhile(x => x.ToLower() != Constants.For)?.ElementAtOrDefault(1);
+			collectionName = words.SkipWhile(x => x.ToLower() != Constants.In).ElementAtOrDefault(1);
 			
 			var validationMessage = GetOperatorValidationResult(collectionName);
 			if (!String.IsNullOrEmpty(validationMessage))
@@ -50,7 +53,7 @@ namespace TemplaterLib
 				var textNodes = newNode.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text);
 				foreach (var textNode in textNodes)
 				{
-					var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?\..+?}}", m => ReplaceTags(m, iterationVariable, item));
+					var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?\..+?}}", m => ReplaceTags(m, item));
 					textNode.InnerHtml = newText;
 				}
 
@@ -91,49 +94,93 @@ namespace TemplaterLib
 			return null;
 		}
 
-		private string ReplaceTags(Match match, string iterationVariable, object item)
+		private string ReplaceTags(Match match, object item)
 		{
-			var valueExpression = match.ToString().TrimValueTags().Trim().Split(' ');
-			var finalValue = String.Empty;
+			var valueExpression = match.ToString().TrimValueTags().Trim();
+			var valueExpressionParts = valueExpression.Split(' ');
+			var replacementValue = String.Empty;
 
-			foreach (var name in valueExpression)
+			foreach (var name in valueExpressionParts)
 			{
-				var itemNameFirstPart = name.Split('.')[0];
-
-				// Refactor:
-				// if LogicalOr then continue;
-				// finalValue = TryGetValueFromCollection;
-				// if (finalValue == null)
-				// { finalValue = GetValueFromAdditionalParameters }
-				// if (finalValue == null) 
-				// { throw "unrecogizable"
-
-				if (itemNameFirstPart.Equals(iterationVariable, StringComparison.OrdinalIgnoreCase))
+				ValidateIterationVaiableUsage(name);
+				
+				if (name == "|")
 				{
-					itemNameFirstPart = name.Split(".")[1];
-					finalValue = item.GetType().GetProperty(itemNameFirstPart, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase).GetValue(item).ToString();
+					continue;
 				}
-				// else SEARCH AMONG ADDITIONAL PARAMS: if (itemNameFirstPart.Equals(Any additional parameter, StringComparison.OrdinalIgnoreCase))
-				//  { finalValue = take additional parameter }
 
-
-
-				else if (itemNameFirstPart == Constants.LogicalOr)
+				replacementValue = TryGetValueFromCollection(name, item);
+				if (replacementValue != null)
 				{
 					break;
 				}
-				else if (name.Contains("."))
-				{
-					throw new ArgumentException($"The iteration variable name \"{iterationVariable}\" does not match the template item name \"{name}\". Template line {Node.Line}.");
-				}
 
-				if (!String.IsNullOrEmpty(finalValue))
+				replacementValue = TryGetValueFromAdditionalData(name);
+				if (replacementValue != null)
 				{
 					break;
 				}
 			}
 
-			return finalValue;
+			if (String.IsNullOrEmpty(replacementValue))
+			{
+				throw new ArgumentException($"Could not recognize template item expression \"{valueExpression}\". Template line {Node.Line}.");
+			}
+
+			return replacementValue;
+		}
+
+		private void ValidateIterationVaiableUsage(string name)
+		{
+			var itemNameFirstPart = name.Split('.')[0];
+			if (name.Contains(".") && !itemNameFirstPart.Equals(iterationVariableName, StringComparison.OrdinalIgnoreCase))
+			{
+				throw new ArgumentException($"Possible error. Cycle iteration vairable \"{iterationVariableName}\" does not match item name \"{name}\". Template line {Node.Line}.");
+			}
+		}
+
+		private string TryGetValueFromCollection(string name, object item)
+		{
+			string nameSecondPart = GetNameSecondPart(name);
+			string result = null;
+
+			if (!string.IsNullOrEmpty(nameSecondPart))
+			{
+				var collectionProperty = item.GetType().GetProperty(nameSecondPart, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+				
+				if (collectionProperty == null)
+				{
+					throw new ArgumentException($"Could not recognize template item name \"{name}\". Template line {Node.Line}.");
+				}
+
+				result = collectionProperty.GetValue(item)?.ToString();
+			}
+
+			return result;
+		}
+
+		private string TryGetValueFromAdditionalData(string name)
+		{
+			string result = null;
+
+			if (!string.IsNullOrEmpty(name))
+			{
+				var additionalDataProperty = Data.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+				result = additionalDataProperty == null? null : additionalDataProperty.GetValue(Data)?.ToString();
+			}
+
+			return result;
+		}
+
+		private static string GetNameSecondPart(string name)
+		{
+			var nameSecondPart = String.Empty;
+			if (name.Split(".", StringSplitOptions.RemoveEmptyEntries).Count() > 1)
+			{
+				nameSecondPart = name.Split(".")[1];
+			}
+
+			return nameSecondPart;
 		}
 
 		private List<HtmlNode> GetPlaceholderNodes(HtmlNode node) =>
