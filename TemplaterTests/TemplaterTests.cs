@@ -13,13 +13,51 @@ namespace TemplaterTests
 		const string expectedFilePath = "ExpectedFile.html";
 
 		[TestMethod]
-		public void CreateHtml_WithProposedTemplateAndData_ReturnsExpectedFile()
+		public void CreateHtml_WithCorrectTemplateAndData_ReturnsExpectedFile()
 		{
+			var v = 1;
 			var templater = new Templater();
-			var template = File.ReadAllText(Path.Combine(baseFilePath, templateFilePath));
-			var data = File.ReadAllText(Path.Combine(baseFilePath, dataFilePath));
-			var expectedResult = File.ReadAllText(Path.Combine(baseFilePath, expectedFilePath));
-	
+			var template = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(templateFilePath)}{v}{Path.GetExtension(templateFilePath)}"));
+			var data = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(dataFilePath)}{v}{Path.GetExtension(dataFilePath)}"));
+			var expectedResult = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(expectedFilePath)}{v}{Path.GetExtension(expectedFilePath)}"));
+
+			var actualResult = templater.CreateHtml(template, data);
+
+			Assert.AreEqual(expectedResult, actualResult);
+		}
+
+		[TestMethod]
+		public void CreateHtml_WithDefaultValuesUsed_ReturnsExpectedFile()
+		{
+			var v = 2;
+			var templater = new Templater();
+			var template = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(templateFilePath)}{v}{Path.GetExtension(templateFilePath)}"));
+			var data = File.ReadAllText(Path.Combine(baseFilePath, 
+				$"{Path.GetFileNameWithoutExtension(dataFilePath)}{v}{Path.GetExtension(dataFilePath)}"));
+			var expectedResult = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(expectedFilePath)}{v}{Path.GetExtension(expectedFilePath)}"));
+
+			var actualResult = templater.CreateHtml(template, data);
+
+			Assert.AreEqual(expectedResult, actualResult);
+		}
+
+		[TestMethod]
+		public void CreateHtml_WithTemplateOfMultipleBlocks_ReturnsExpectedFile()
+		{
+			var v = 3;
+			var templater = new Templater();
+			var template = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(templateFilePath)}{v}{Path.GetExtension(templateFilePath)}"));
+			var data = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(dataFilePath)}{v}{Path.GetExtension(dataFilePath)}"));
+			var expectedResult = File.ReadAllText(Path.Combine(baseFilePath,
+				$"{Path.GetFileNameWithoutExtension(expectedFilePath)}{v}{Path.GetExtension(expectedFilePath)}"));
+
 			var actualResult = templater.CreateHtml(template, data);
 
 			Assert.AreEqual(expectedResult, actualResult);

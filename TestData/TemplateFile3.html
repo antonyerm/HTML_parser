@@ -1,0 +1,19 @@
+<ul id="products">
+	{% for product in products %}
+	<li>
+		<h2>{{product.name}}</h2>
+		Only {{product.price | price }}
+		
+		{{product.description | paragraph }}
+	</li>
+	{% endfor %}
+</ul>
+<ul id="products">
+	{% for product in products %}
+	<li>
+		<p>{{product.description | paragraph }}</p>
+		<h2>{{product.name}}</h2>
+		Only {{product.price | price }}
+	</li>
+	{% endfor %}
+</ul>
