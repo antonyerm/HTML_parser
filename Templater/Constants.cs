@@ -13,11 +13,10 @@ namespace TemplaterLib
 		public const string EndFunctionTag = "%}";
 		public const string StartValueTag = "{{";
 		public const string EndValueTag = "}}";
+		public const string LogicalOr = "|";
 
 		public const string For = "for";
 		public const string In = "in";
 		public const string EndFor = "endfor";
-
-
 	}
 }

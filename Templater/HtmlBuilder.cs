@@ -10,43 +10,49 @@ namespace TemplaterLib
 	internal class HtmlBuilder
 	{
 		private HtmlDocument document;
+		private InputDataModel inputData;
 		private TemplateDataModel data;
 		private string defaultDescription;
 		private decimal  defaultPrice;
 
-		public HtmlBuilder WithTemplate(string template)
+        public HtmlBuilder()
+        {
+            this.data = new TemplateDataModel();
+        }
+
+        public HtmlBuilder WithTemplate(string template)
 		{
 			this.document = new HtmlDocument();
 			this.document.LoadHtml(template);
 			return this;
 		}
 
-		public HtmlBuilder WithData(string data)
+		public HtmlBuilder WithData(string inputData)
 		{
 			var options = new JsonSerializerOptions()
 			{
 				PropertyNameCaseInsensitive = true
 			};
 
-			this.data = JsonSerializer.Deserialize<TemplateDataModel>(data, options);
+			this.data.InputData = JsonSerializer.Deserialize<InputDataModel>(inputData, options);
 			return this;
 		}
 
 		public HtmlBuilder WithDefaultDescription(string defaultDescription)
 		{
-			this.defaultDescription = defaultDescription;
+			this.data.Paragraph = defaultDescription;
 			return this;
 		}
 
 		public HtmlBuilder WithDefaultPrice(decimal defaultPrice)
 		{
-			this.defaultPrice = defaultPrice;
+			this.data.Price = defaultPrice;
 			return this;
 		}
 
 		public string Build()
 		{
-			var nodesWithOperatorDelegate = GetNodesWithOperatorDelegate();
+			var nodesWithOperatorDelegate = GetNodesWithAddedOperatorDelegate();
 			foreach (var node in nodesWithOperatorDelegate)
 			{
 				var replacementNodes = node.ExecuteOperator();
@@ -56,7 +62,7 @@ namespace TemplaterLib
 			return document.DocumentNode.OuterHtml;
 		}
 
-		private List<INodeWithOperator> GetNodesWithOperatorDelegate()
+		private List<INodeWithOperator> GetNodesWithAddedOperatorDelegate()
 		{
 			var candidateNodes = document.DocumentNode.DescendantsAndSelf()
 				.Where(x => hasSomeFunction(x)).ToList();

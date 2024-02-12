@@ -9,6 +9,7 @@ namespace Client
 		const string baseFilePath = "..\\..\\..\\..\\TestData\\";
 		const string templateFilePath = "TemplateFile.html";
 		const string dataFilePath = "DataFile.json";
+		const string outputFilePath = "output.html";
 		static void Main(string[] args)
 		{
 			Console.WriteLine("An example of CreateHtml library method.\n");
@@ -18,9 +19,9 @@ namespace Client
 			var data = File.ReadAllText(Path.Combine(baseFilePath, dataFilePath));
 
 			var result = templater.CreateHtml(template, data);
+			File.WriteAllText(Path.Combine(baseFilePath, outputFilePath), result);
 
 			Console.WriteLine(result);
-
 		}
 	}
 }
