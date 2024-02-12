@@ -1,0 +1,10 @@
+<ul id="products">
+	{% for product in products %}
+	<li>
+		<h2>{{something-invalid}}</h2>
+		Only {{product.price | price }}
+		
+		{{product.description | paragraph }}
+	</li>
+	{% endfor %}
+</ul>

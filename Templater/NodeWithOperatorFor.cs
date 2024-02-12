@@ -87,7 +87,7 @@ namespace TemplaterLib
 			var collectionNameInNodeId = Node.Id;
 			if (!collectionName.Equals(collectionNameInNodeId, StringComparison.OrdinalIgnoreCase))
 			{
-				return $"Inconsistent Template. Collection name in node definition and in For cycle definition do not match. Template line {Node.Line}";
+				return $"Inconsistent Template. Collection name in HTML node definition \"{collectionName}\" and in For cycle definition do not match. Template line {Node.Line}";
 			}
 
 			var typesInDataModel = typeof(InputDataModel).GetProperties();
@@ -129,7 +129,7 @@ namespace TemplaterLib
 
 			if (String.IsNullOrEmpty(replacementValue))
 			{
-				throw new ArgumentException($"Could not recognize template item expression \"{valueExpression}\". Template line {Node.Line}.");
+				throw new ArgumentException($"Could not recognize template item name \"{valueExpression}\". Template line {Node.Line}.");
 			}
 
 			return replacementValue;
