@@ -20,18 +20,18 @@ namespace TemplaterLib
 
 		public HtmlNode Node { get; }
 
-		public Func<HtmlNodeCollection> ExecuteOperator { get; }
+		public Func<HtmlNode> ExecuteOperator { get; }
 
-		public NodeWithOperatorFor(HtmlNode node, string operatorName, TemplateDataModel data)
+		public NodeWithOperatorFor(HtmlNode node, TemplateDataModel data)
 		{
 			Node = node;
 			Data = data;
 			ExecuteOperator = For;
 		}
 
-		private HtmlNodeCollection For()
+		private HtmlNode For()
 		{
-			var replacementNodes = new HtmlNodeCollection(Node);
+			var replacementNode = Node.CloneNode(deep: false);
 			var cycleDeclaration = Node.FirstChild.InnerHtml.Trim();
 			var words = cycleDeclaration.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 			iterationVariableName = words.SkipWhile(x => x.ToLower() != Constants.For)?.ElementAtOrDefault(1);
@@ -45,28 +45,33 @@ namespace TemplaterLib
 
 			// Get collection object by its name
 			var collectionObjectInfo = typeof(InputDataModel).GetProperty(collectionName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
-			var collectionObject = (IEnumerable)collectionObjectInfo.GetValue(Data.InputData);
+			var collectionObject = (IList)collectionObjectInfo.GetValue(Data.InputData);
 
-			foreach (var item in collectionObject)
+			for (int i = 0; i < collectionObject.Count; i++)
 			{
-				var newNode = Node.CloneNode(true);
+				var item = collectionObject[i];
+				var newNode = Node.CloneNode(deep: true);
 				var textNodes = newNode.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text);
 				foreach (var textNode in textNodes)
 				{
-					var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?\..+?}}", m => ReplaceTags(m, item));
+					var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?}}", m => ReplaceTags(m, item));
 					textNode.InnerHtml = newText;
 				}
 
-				// TODO:modify InnerHtml of first and last children to keep \t and \n at the end and start
-				newNode.FirstChild.Remove();
-				newNode.LastChild.Remove();
-				foreach (var childNode in newNode.ChildNodes)
+				newNode.FirstChild.InnerHtml = RemoveOperatorLine(newNode.FirstChild.InnerHtml);
+				if (i < collectionObject.Count - 1)
 				{
-					replacementNodes.Add(childNode);
+					newNode.LastChild.Remove();
 				}
+				else
+				{
+					newNode.LastChild.InnerHtml = RemoveOperatorLine(newNode.LastChild.InnerHtml);
+				}
+
+				replacementNode.AppendChildren(newNode.ChildNodes);
 			};
 
-			return replacementNodes;
+			return replacementNode;
 		}
 
 		private string GetOperatorValidationResult(string collectionName)
@@ -102,7 +107,7 @@ namespace TemplaterLib
 
 			foreach (var name in valueExpressionParts)
 			{
-				ValidateIterationVaiableUsage(name);
+				ValidateIterationVariableUsage(name);
 				
 				if (name == "|")
 				{
@@ -130,7 +135,7 @@ namespace TemplaterLib
 			return replacementValue;
 		}
 
-		private void ValidateIterationVaiableUsage(string name)
+		private void ValidateIterationVariableUsage(string name)
 		{
 			var itemNameFirstPart = name.Split('.')[0];
 			if (name.Contains(".") && !itemNameFirstPart.Equals(iterationVariableName, StringComparison.OrdinalIgnoreCase))
@@ -187,14 +192,25 @@ namespace TemplaterLib
 			node.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text
 				&& x.InnerHtml.StartsWith(Constants.StartValueTag)
 				&& x.InnerHtml.EndsWith(Constants.EndValueTag)).ToList();
+
+		private string RemoveOperatorLine(string s)
+		{
+			var result = String.Empty;
+			var lineSeparator = new String(s.SkipWhile(x => !"\n\r".Contains(x))
+											.TakeWhile(x => "\n\r".Contains(x))
+											.ToArray());
+			var fragments = s.Split(lineSeparator);
+
+			if (fragments.Count() < 3)
+			{
+				result = s.Split(Constants.StartValueTag)[0] + s.Split(Constants.EndValueTag)[1];
+			}
+			else
+			{
+				result = fragments[0] + lineSeparator + fragments.Last();
+			}
+			
+			return result;
+		}
 	}
 }
-
-//replacementNodes.Add(HtmlNode.CreateNode($"<div>New product: {product.Name}</div>"));
-// todo
-// OK1. find name of item (product)
-// OK2. find name of collection (products)
-// OK3. compare name of collection to name of model collection via reflection. If not equal => exception "Unknown collection"
-// 4. replace all item.value in descendants.innerHtml with model-prop.model-value, via reflection
-// 5. remove first child innerHtml up to the point where "%}" ends and \t start, keeping the \t chars
-// 6. remove last child completely

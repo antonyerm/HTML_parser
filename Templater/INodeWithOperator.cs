@@ -11,6 +11,6 @@ namespace TemplaterLib
 
 		HtmlNode Node { get; }
 
-		Func<HtmlNodeCollection> ExecuteOperator { get; }
+		Func<HtmlNode> ExecuteOperator { get; }
 	}
 }

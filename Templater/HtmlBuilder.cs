@@ -55,8 +55,8 @@ namespace TemplaterLib
 			var nodesWithOperatorDelegate = GetNodesWithAddedOperatorDelegate();
 			foreach (var node in nodesWithOperatorDelegate)
 			{
-				var replacementNodes = node.ExecuteOperator();
-				ReplaceNodesWithProcessedOnes(node.Node, replacementNodes);
+				var replacementNode = node.ExecuteOperator();
+				node.Node.ParentNode.ReplaceChild(replacementNode, node.Node);
 			}
 
 			return document.DocumentNode.OuterHtml;
@@ -65,7 +65,7 @@ namespace TemplaterLib
 		private List<INodeWithOperator> GetNodesWithAddedOperatorDelegate()
 		{
 			var candidateNodes = document.DocumentNode.DescendantsAndSelf()
-				.Where(x => hasSomeFunction(x)).ToList();
+				.Where(x => HasSomeFunction(x)).ToList();
 			var nodesWithOperatorDelegate = new List<INodeWithOperator>();
 			foreach (var node in candidateNodes)
 			{
@@ -79,7 +79,7 @@ namespace TemplaterLib
 			return nodesWithOperatorDelegate;
 		}
 
-		private bool hasSomeFunction(HtmlNode x)
+		private bool HasSomeFunction(HtmlNode x)
 		{
 			var firstChildText = x.FirstChild?.InnerHtml.Trim();
 			var lastChildText = x.LastChild?.InnerHtml.Trim();
@@ -89,21 +89,15 @@ namespace TemplaterLib
 				return false;
 			}
 
-			var isHavingFunctionTagsOnEnds = firstChildText.StartsWith(Constants.StartFunctionTag)
-				&& firstChildText.EndsWith(Constants.EndFunctionTag)
-				&& lastChildText.StartsWith(Constants.StartFunctionTag)
-				&& lastChildText.EndsWith(Constants.EndFunctionTag)
+			var isHavingFunctionTagsOnEnds = firstChildText.StartsWith(Constants.StartOperatorTag)
+				&& firstChildText.EndsWith(Constants.EndOperatorTag)
+				&& lastChildText.StartsWith(Constants.StartOperatorTag)
+				&& lastChildText.EndsWith(Constants.EndOperatorTag)
 				&& x.FirstChild != x.LastChild
 				&& x.FirstChild?.NodeType == HtmlNodeType.Text
 				&& x.LastChild?.NodeType == HtmlNodeType.Text;
 
 			return isHavingFunctionTagsOnEnds;
-		}
-
-		private void ReplaceNodesWithProcessedOnes(HtmlNode parent, HtmlNodeCollection newChildren)
-		{
-			parent.RemoveAllChildren();
-			parent.AppendChildren(newChildren);
 		}
 	}
 }

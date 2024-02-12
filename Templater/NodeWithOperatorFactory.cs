@@ -13,7 +13,7 @@ namespace TemplaterLib
 			switch (operatorName.ToLower())
 			{
 				case Constants.For:
-					return new NodeWithOperatorFor(node, operatorName, data);
+					return new NodeWithOperatorFor(node, data);
 				default:
 					throw new ArgumentException("Invalid operator");
 			}

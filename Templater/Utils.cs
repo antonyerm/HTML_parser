@@ -8,14 +8,14 @@ namespace TemplaterLib
 	{
 		public static string TrimOperatorTags(this string s)
 		{
-			if (s.StartsWith(Constants.StartFunctionTag, StringComparison.OrdinalIgnoreCase))
+			if (s.StartsWith(Constants.StartOperatorTag, StringComparison.OrdinalIgnoreCase))
 			{
-				s = s.Substring(Constants.StartFunctionTag.Length);
+				s = s.Substring(Constants.StartOperatorTag.Length);
 			}
 
-			if (s.EndsWith(Constants.EndFunctionTag, StringComparison.OrdinalIgnoreCase))
+			if (s.EndsWith(Constants.EndOperatorTag, StringComparison.OrdinalIgnoreCase))
 			{
-				s = s.Substring(0, s.Length - Constants.StartFunctionTag.Length);
+				s = s.Substring(0, s.Length - Constants.StartOperatorTag.Length);
 			}
 
 			return s;

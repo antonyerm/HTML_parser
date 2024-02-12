@@ -9,8 +9,8 @@ namespace TemplaterLib
 		public const string DefaultDescription = "default description";
 		public const decimal DefaultPrice = 5.5m;
 
-		public const string StartFunctionTag = "{%";
-		public const string EndFunctionTag = "%}";
+		public const string StartOperatorTag = "{%";
+		public const string EndOperatorTag = "%}";
 		public const string StartValueTag = "{{";
 		public const string EndValueTag = "}}";
 		public const string LogicalOr = "|";
