@@ -1,13 +1,9 @@
 ﻿using HtmlAgilityPack;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using System.Xml.Xsl;
 
 namespace TemplaterLib
 {
@@ -32,46 +28,66 @@ namespace TemplaterLib
 		private HtmlNode For()
 		{
 			var replacementNode = Node.CloneNode(deep: false);
-			var cycleDeclaration = Node.FirstChild.InnerHtml.Trim();
-			var words = cycleDeclaration.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-			iterationVariableName = words.SkipWhile(x => x.ToLower() != Constants.For)?.ElementAtOrDefault(1);
-			collectionName = words.SkipWhile(x => x.ToLower() != Constants.In).ElementAtOrDefault(1);
-			
-			var validationMessage = GetOperatorValidationResult(collectionName);
-			if (!String.IsNullOrEmpty(validationMessage))
-			{
-				throw new ArgumentException(validationMessage);
-			}
+			GetCollectionAndItemNames();
+			ValidateTemplateAndInputData();
 
-			// Get collection object by its name
+			// Get collection object in Data by its name
 			var collectionObjectInfo = typeof(InputDataModel).GetProperty(collectionName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
 			var collectionObject = (IList)collectionObjectInfo.GetValue(Data.InputData);
 
 			for (int i = 0; i < collectionObject.Count; i++)
 			{
-				var item = collectionObject[i];
 				var newNode = Node.CloneNode(deep: true);
-				var textNodes = newNode.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text);
-				foreach (var textNode in textNodes)
-				{
-					var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?}}", m => ReplaceTags(m, item));
-					textNode.InnerHtml = newText;
-				}
+				var item = collectionObject[i];
+				ReplaceTextInTags(newNode, item);
 
-				newNode.FirstChild.InnerHtml = RemoveOperatorLine(newNode.FirstChild.InnerHtml);
-				if (i < collectionObject.Count - 1)
-				{
-					newNode.LastChild.Remove();
-				}
-				else
-				{
-					newNode.LastChild.InnerHtml = RemoveOperatorLine(newNode.LastChild.InnerHtml);
-				}
+				var isLastIteration = i == collectionObject.Count - 1;
+				RemoveTemplateTagsFromResult(newNode, isLastIteration);
 
 				replacementNode.AppendChildren(newNode.ChildNodes);
 			};
 
 			return replacementNode;
+		}
+
+		private void RemoveTemplateTagsFromResult(HtmlNode newNode, bool isLastIteration)
+		{
+			newNode.FirstChild.InnerHtml = RemoveOperatorLine(newNode.FirstChild.InnerHtml);
+			if (isLastIteration)
+			{
+				newNode.LastChild.InnerHtml = RemoveOperatorLine(newNode.LastChild.InnerHtml);
+			}
+			else
+			{
+				newNode.LastChild.Remove();
+			}
+		}
+
+		private void ReplaceTextInTags(HtmlNode newNode, object item)
+		{
+			var textNodes = newNode.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text);
+			foreach (var textNode in textNodes)
+			{
+				var newText = Regex.Replace(textNode.InnerHtml, @"{{.+?}}", m => ReplaceTags(m, item));
+				textNode.InnerHtml = newText;
+			}
+		}
+
+		private void ValidateTemplateAndInputData()
+		{
+			var validationMessage = GetOperatorValidationResult(collectionName);
+			if (!String.IsNullOrEmpty(validationMessage))
+			{
+				throw new ArgumentException(validationMessage);
+			}
+		}
+
+		private void GetCollectionAndItemNames()
+		{
+			var cycleDeclaration = Node.FirstChild.InnerHtml.Trim();
+			var words = cycleDeclaration.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+			iterationVariableName = words.SkipWhile(x => x.ToLower() != Constants.For)?.ElementAtOrDefault(1);
+			collectionName = words.SkipWhile(x => x.ToLower() != Constants.In).ElementAtOrDefault(1);
 		}
 
 		private string GetOperatorValidationResult(string collectionName)
@@ -188,11 +204,6 @@ namespace TemplaterLib
 			return nameSecondPart;
 		}
 
-		private List<HtmlNode> GetPlaceholderNodes(HtmlNode node) =>
-			node.DescendantsAndSelf().Where(x => x.NodeType == HtmlNodeType.Text
-				&& x.InnerHtml.StartsWith(Constants.StartValueTag)
-				&& x.InnerHtml.EndsWith(Constants.EndValueTag)).ToList();
-
 		private string RemoveOperatorLine(string s)
 		{
 			var result = String.Empty;
@@ -203,6 +214,7 @@ namespace TemplaterLib
 
 			if (fragments.Count() < 3)
 			{
+				// When there are less than one lineSeparator
 				result = s.Split(Constants.StartValueTag)[0] + s.Split(Constants.EndValueTag)[1];
 			}
 			else

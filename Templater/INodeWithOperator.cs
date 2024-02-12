@@ -7,10 +7,10 @@ namespace TemplaterLib
 {
 	internal interface INodeWithOperator
 	{
-		TemplateDataModel Data { get; }
-
 		HtmlNode Node { get; }
 
 		Func<HtmlNode> ExecuteOperator { get; }
+
+		TemplateDataModel Data { get; }
 	}
 }
