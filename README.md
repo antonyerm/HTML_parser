@@ -1,5 +1,6 @@
 # Templater library
-_Author - Anton Yermolayev (https://github.com/antonyerm/)_
+_Author - Anton Yermolayev (https://github.com/antonyerm/)_  
+
 This is a solutions for the test task:
 "You need to build a library that will be able to generate HTML based on template and JSON data."
 
