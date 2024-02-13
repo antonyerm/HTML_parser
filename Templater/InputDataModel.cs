@@ -3,6 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace TemplaterLib
 {
+	/// <summary>
+	/// Model for the data coming from the input data file.
+	/// </summary>
 	internal class InputDataModel
 	{
         public List<Product> Products { get; set; }

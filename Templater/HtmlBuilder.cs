@@ -9,10 +9,7 @@ namespace TemplaterLib
 	internal class HtmlBuilder
 	{
 		private HtmlDocument document;
-		private InputDataModel inputData;
 		private TemplateDataModel data;
-		private string defaultDescription;
-		private decimal  defaultPrice;
 
         public HtmlBuilder()
         {
@@ -49,6 +46,11 @@ namespace TemplaterLib
 			return this;
 		}
 
+		/// <summary>
+		/// Implements the main algorithm. 
+		/// The input data is sent by the caller using fluent interface.
+		/// </summary>
+		/// <returns>The created HTML.</returns>
 		public string Build()
 		{
 			var nodesWithOperatorDelegate = GetNodesWithAddedOperatorDelegate();
@@ -61,6 +63,11 @@ namespace TemplaterLib
 			return document.DocumentNode.OuterHtml;
 		}
 
+		/// <summary>
+		/// Creates a list of nodes which have operators in text nodes.
+		/// Each node object has a delegate which will perform the operator function.
+		/// </summary>
+		/// <returns></returns>
 		private List<INodeWithOperator> GetNodesWithAddedOperatorDelegate()
 		{
 			var candidateNodes = document.DocumentNode.DescendantsAndSelf()
