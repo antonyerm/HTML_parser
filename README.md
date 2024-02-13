@@ -1,13 +1,16 @@
-# HTML_parser
+# Templater library
+_Author - Anton Yermolayev (https://github.com/antonyerm/)_
 This is a solutions for the test task:
 "You need to build a library that will be able to generate HTML based on template and JSON data."
 
-**Folders:**
+**Folders:**  
+
 _Client_ - a console app which loads the data from the files in _TestData_ folder.
 _Templater_ - the library with CreateHtml method.
 _TemplateTests_ - a test project with some tests.
 
-**Usage**
+**Usage:**  
+
 Put your data in _DataFile.json_ and your template in _TemplateFile.html_. Start the _Client_ project. The result will be printed on screen and saved to _output.html_ file. The additional parameters (default data) is hardcoded in `Constants` class.
 
 **Highlights**:
